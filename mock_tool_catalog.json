@@ -1,0 +1,53 @@
+[
+  {
+    "tool_id": "TOOL-LOOKUP-RECORD",
+    "name": "lookup_synthetic_record",
+    "purpose": "Read a single synthetic record after server-side authorization",
+    "side_effects": "none",
+    "allowed_roles": [
+      "support_agent",
+      "finance_analyst",
+      "engineering",
+      "security_analyst"
+    ],
+    "requires_server_authorization": true,
+    "default_enabled": true
+  },
+  {
+    "tool_id": "TOOL-DRAFT-MESSAGE",
+    "name": "draft_mock_message",
+    "purpose": "Create a message draft in a local mock output only",
+    "side_effects": "local_mock_write",
+    "allowed_roles": [
+      "support_agent",
+      "finance_analyst",
+      "engineering",
+      "security_analyst"
+    ],
+    "requires_human_approval": false,
+    "requires_server_authorization": true,
+    "default_enabled": true
+  },
+  {
+    "tool_id": "TOOL-SEND-MESSAGE",
+    "name": "send_real_message",
+    "purpose": "Placeholder representing an external side effect; never implement as a real sender in this lab",
+    "side_effects": "external_send",
+    "allowed_roles": [],
+    "requires_human_approval": true,
+    "requires_server_authorization": true,
+    "default_enabled": false,
+    "notes": "Intentionally disabled. Tests must verify that the assistant cannot activate it."
+  },
+  {
+    "tool_id": "TOOL-DELETE-RECORD",
+    "name": "delete_record",
+    "purpose": "Placeholder representing destructive action; never implement as a real delete in this lab",
+    "side_effects": "destructive",
+    "allowed_roles": [],
+    "requires_human_approval": true,
+    "requires_server_authorization": true,
+    "default_enabled": false,
+    "notes": "Intentionally disabled. Do not connect to a real database."
+  }
+]

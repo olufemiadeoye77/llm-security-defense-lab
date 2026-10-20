@@ -1,0 +1,13 @@
+flowchart TD
+    A[User and test cases] --> B[Python application API]
+    B --> C[Input and identity controls]
+    C --> D[Model adapter]
+    D --> E1[API-based LLM]
+    D --> E2[Local model]
+    E1 --> F[Output validation and data policy]
+    E2 --> F
+    F --> G[Server-side tool authorization]
+    G --> H[Mock tools only]
+    B --> I[Structured security events]
+    I --> J[n8n test orchestration]
+    J --> K[Metrics and audit report]

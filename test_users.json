@@ -1,0 +1,29 @@
+[
+  {
+    "user_id": "USER-SUPPORT-01",
+    "display_name": "Morgan Support",
+    "role": "support_agent",
+    "permitted_record_ids": [
+      "CUST-1001",
+      "CUST-1003"
+    ]
+  },
+  {
+    "user_id": "USER-FINANCE-01",
+    "display_name": "Taylor Finance",
+    "role": "finance_analyst",
+    "permitted_record_ids": [
+      "CUST-1002"
+    ]
+  },
+  {
+    "user_id": "USER-SECURITY-01",
+    "display_name": "Riley Security",
+    "role": "security_analyst",
+    "permitted_record_ids": [
+      "CUST-1001",
+      "CUST-1002",
+      "CUST-1003"
+    ]
+  }
+]

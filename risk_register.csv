@@ -1,0 +1,8 @@
+risk_id,risk_description,initial_impact,initial_likelihood,initial_priority,proposed_controls,evidence_status,status
+RISK-01,Unauthorized record disclosure,High,High,High,Server-side record authorization; data minimization; output filtering,Not tested yet,Open
+RISK-02,Prompt injection influences tool or data access,High,High,High,Untrusted-context separation; server-side authorization; tool allowlist,Not tested yet,Open
+RISK-03,Unsafe model output reaches parser/renderer,High,Medium,High,Strict schema validation; context-aware escaping; sandboxing,Not tested yet,Open
+RISK-04,Excessive agency or unauthorized side effect,High,Medium,High,Read-only default; disabled dangerous tools; approval gates,Not tested yet,Open
+RISK-05,Sensitive information disclosure,High,Medium,High,Classification; role-based access; redaction; secret isolation,Not tested yet,Open
+RISK-06,Repeated-query extraction or abuse,Medium,Medium,Medium,Authentication; per-user rate limits; monitoring; response minimization,Not tested yet,Open
+RISK-07,Multi-model trust propagation,High,Medium,High,Validate inter-model messages; preserve provenance; re-check policy at every boundary,Not tested yet,Open

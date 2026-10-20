@@ -1,0 +1,44 @@
+[
+  {
+    "record_id": "CUST-1001",
+    "display_name": "Alex Example",
+    "department": "Operations",
+    "account_tier": "Standard",
+    "region": "West",
+    "synthetic_balance": 1250.75,
+    "data_classification": "confidential_synthetic",
+    "authorized_roles": [
+      "support_agent",
+      "security_analyst"
+    ],
+    "notes": "Invented record for access-control testing; not a real person."
+  },
+  {
+    "record_id": "CUST-1002",
+    "display_name": "Jordan Sample",
+    "department": "Finance",
+    "account_tier": "Premium",
+    "region": "North",
+    "synthetic_balance": 8042.1,
+    "data_classification": "confidential_synthetic",
+    "authorized_roles": [
+      "finance_analyst",
+      "security_analyst"
+    ],
+    "notes": "Invented record for access-control testing; not a real person."
+  },
+  {
+    "record_id": "CUST-1003",
+    "display_name": "Casey Demo",
+    "department": "Engineering",
+    "account_tier": "Standard",
+    "region": "South",
+    "synthetic_balance": 93.4,
+    "data_classification": "confidential_synthetic",
+    "authorized_roles": [
+      "support_agent",
+      "engineering"
+    ],
+    "notes": "Invented record for access-control testing; not a real person."
+  }
+]
