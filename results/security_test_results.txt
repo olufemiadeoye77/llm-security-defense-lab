@@ -1,0 +1,22 @@
+test_admin_can_view_restricted_records (test_app.TestAuthorization.test_admin_can_view_restricted_records) ... ok
+test_analyst_can_generate_demo_report (test_app.TestAuthorization.test_analyst_can_generate_demo_report) ... ok
+test_analyst_cannot_view_restricted_records (test_app.TestAuthorization.test_analyst_cannot_view_restricted_records) ... ok
+test_authorization_rejects_unknown_tool (test_app.TestAuthorization.test_authorization_rejects_unknown_tool) ... ok
+test_support_cannot_view_restricted_records (test_app.TestAuthorization.test_support_cannot_view_restricted_records) ... ok
+test_unknown_tool_is_blocked (test_app.TestAuthorization.test_unknown_tool_is_blocked) ... ok
+test_empty_input_is_rejected (test_app.TestInputValidation.test_empty_input_is_rejected) ... ok
+test_input_over_200_characters_is_rejected (test_app.TestInputValidation.test_input_over_200_characters_is_rejected) ... ok
+test_valid_input_is_trimmed (test_app.TestInputValidation.test_valid_input_is_trimmed) ... ok
+test_allows_ordinary_business_request (test_prompt_guard.TestPromptInjectionDetection.test_allows_ordinary_business_request) ... ok
+test_detection_handles_extra_whitespace (test_prompt_guard.TestPromptInjectionDetection.test_detection_handles_extra_whitespace) ... ok
+test_detection_ignores_case (test_prompt_guard.TestPromptInjectionDetection.test_detection_ignores_case) ... ok
+test_detects_admin_impersonation_phrase (test_prompt_guard.TestPromptInjectionDetection.test_detects_admin_impersonation_phrase) ... ok
+test_detects_authorization_bypass (test_prompt_guard.TestPromptInjectionDetection.test_detects_authorization_bypass) ... ok
+test_detects_ignore_previous_instructions (test_prompt_guard.TestPromptInjectionDetection.test_detects_ignore_previous_instructions) ... ok
+test_detects_system_prompt_extraction (test_prompt_guard.TestPromptInjectionDetection.test_detects_system_prompt_extraction) ... ok
+test_non_string_input_is_flagged (test_prompt_guard.TestPromptInjectionDetection.test_non_string_input_is_flagged) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.002s
+
+OK
