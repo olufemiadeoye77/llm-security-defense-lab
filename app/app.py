@@ -8,7 +8,7 @@ This is an educational demonstration, not production security software.
 """
 
 from dataclasses import dataclass
-
+from app.prompt_guard import detect_prompt_injection
 
 @dataclass
 class User:
@@ -45,8 +45,20 @@ MOCK_TOOLS = {
 
 
 def validate_input(value: str) -> str:
-    """Reject empty or excessively long input."""
+    """Reject non-string, empty, or excessively long input."""
+    if not isinstance(value, str):
+        raise ValueError("Input must be text.")
+
     value = value.strip()
+
+    if not value:
+        raise ValueError("Input cannot be empty.")
+
+    if len(value) > 200:
+        raise ValueError("Input is too long (maximum 200 characters).")
+
+    return value
+
 
     if not value:
         raise ValueError("Input cannot be empty.")
@@ -98,6 +110,21 @@ def execute_mock_tool(user: User, tool_name: str) -> str:
 
     return "BLOCKED: unknown tool."
 
+def process_user_request(user: User, user_input: str, tool_name: str) -> str:
+    """Check input and authorization before executing a mock tool."""
+
+    try:
+        validated_input = validate_input(user_input)
+    except (ValueError, AttributeError):
+        return "BLOCKED: invalid input."
+
+    if detect_prompt_injection(validated_input):
+        return "BLOCKED: suspected prompt injection."
+
+    if not authorize(user, tool_name):
+        return f"BLOCKED: role '{user.role}' cannot use '{tool_name}'."
+
+    return execute_mock_tool(user, tool_name)
 
 def main():
     print("=" * 48)
@@ -150,11 +177,10 @@ def main():
             continue
 
         tool_name = actions[command]
-        result = execute_mock_tool(user, tool_name)
+result = process_user_request(user, command, tool_name)
 
-        print(f"\nAction: {tool_name}")
-        print(f"Result: {result}")
-
+print(f"\nAction: {tool_name}")
+print(f"Result: {result}")
 
 if __name__ == "__main__":
     main()
