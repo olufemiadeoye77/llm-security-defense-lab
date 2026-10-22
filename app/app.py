@@ -1,14 +1,16 @@
 
 """
 LLM Security Defense Lab
-Version 0.1 — Local Python prototype
+Version 0.2 — Local Python prototype
 
 Uses invented records and harmless mock tools only.
 This is an educational demonstration, not production security software.
 """
 
 from dataclasses import dataclass
+
 from app.prompt_guard import detect_prompt_injection
+
 
 @dataclass
 class User:
@@ -60,15 +62,6 @@ def validate_input(value: str) -> str:
     return value
 
 
-    if not value:
-        raise ValueError("Input cannot be empty.")
-
-    if len(value) > 200:
-        raise ValueError("Input is too long (maximum 200 characters).")
-
-    return value
-
-
 def authorize(user: User, tool_name: str) -> bool:
     """Check that a tool exists and the user's role is permitted."""
     allowed_roles = MOCK_TOOLS.get(tool_name)
@@ -95,7 +88,6 @@ def execute_mock_tool(user: User, tool_name: str) -> str:
         })
 
     if tool_name == "view_restricted_record":
-        # The restricted record is shown only after authorization.
         return str({
             key: record
             for key, record in CUSTOMERS.items()
@@ -110,9 +102,11 @@ def execute_mock_tool(user: User, tool_name: str) -> str:
 
     return "BLOCKED: unknown tool."
 
-def process_user_request(user: User, user_input: str, tool_name: str) -> str:
-    """Check input and authorization before executing a mock tool."""
 
+def process_user_request(
+    user: User, user_input: str, tool_name: str
+) -> str:
+    """Validate input, detect suspicious phrases, then authorize the tool."""
     try:
         validated_input = validate_input(user_input)
     except (ValueError, AttributeError):
@@ -125,6 +119,7 @@ def process_user_request(user: User, user_input: str, tool_name: str) -> str:
         return f"BLOCKED: role '{user.role}' cannot use '{tool_name}'."
 
     return execute_mock_tool(user, tool_name)
+
 
 def main():
     print("=" * 48)
@@ -177,10 +172,13 @@ def main():
             continue
 
         tool_name = actions[command]
-result = process_user_request(user, command, tool_name)
 
-print(f"\nAction: {tool_name}")
-print(f"Result: {result}")
+        # Route every selected action through the security checks.
+        result = process_user_request(user, command, tool_name)
+
+        print(f"\nAction: {tool_name}")
+        print(f"Result: {result}")
+
 
 if __name__ == "__main__":
     main()
