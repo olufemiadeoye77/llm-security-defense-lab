@@ -1,4 +1,3 @@
-
 """
 LLM Security Defense Lab
 Version 0.2 — Local Python prototype
