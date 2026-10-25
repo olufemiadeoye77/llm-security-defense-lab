@@ -1,4 +1,4 @@
-"""Run the attack corpus through the pipeline at a given defense profile."""
+﻿"""Run the attack corpus through the pipeline at a given defense profile."""
 
 import argparse
 import json
@@ -14,11 +14,12 @@ CORPUS = ROOT / "data" / "attack_corpus.json"
 RESULTS = ROOT / "results"
 
 PROFILES = {
-    "none":             set(),
-    "input_validation": {"input_validation"},
-    "prompt_guard":     {"prompt_guard"},
-    "authz":            {"authz"},
-    "all":              {"input_validation", "prompt_guard", "authz"},
+    "none":            set(),
+    "prompt_guard":    {"prompt_guard"},
+    "authz":           {"authz"},
+    "output_filter":   {"output_filter"},
+    "all":             {"input_validation", "prompt_guard", "authz"},
+    "all_plus_output": {"input_validation", "prompt_guard", "authz", "output_filter"},
 }
 
 
@@ -38,6 +39,7 @@ def run_corpus(profile_name: str) -> list:
             "input": case["input"],
             "blocked": result.blocked,
             "block_reason": result.block_reason,
+            "output_findings": result.output_findings or [],
             "verdict": verdict,
         })
     return out
