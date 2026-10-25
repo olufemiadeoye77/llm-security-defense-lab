@@ -18,6 +18,6 @@ htmlcov/
 
 # Local run output
 logs/
-results/
+# results/ (kept: reproducibility artifacts are committed)
 *.log
 .DS_Store
