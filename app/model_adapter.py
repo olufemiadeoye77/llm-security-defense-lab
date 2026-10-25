@@ -1,12 +1,6 @@
-﻿"""Model adapter layer.
+﻿"""Model adapter layer (Stage 3: adds encoded-output support)."""
 
-Uniform interface for any LLM backend.
-- MockModel: deterministic, offline, simulates an OVER-COMPLIANT LLM
-  that both leaks prompts and attempts unauthorized tool calls under
-  attack. Gives the harness a real attack surface.
-- (Stage 4) APIModel, LocalModel: replace without touching the pipeline.
-"""
-
+import base64
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Optional
@@ -37,22 +31,25 @@ class MockModel(ModelAdapter):
     def generate(self, system: str, user: str, context: str = "") -> ModelResponse:
         ul = user.lower()
         attack = any(t in ul for t in self._ATTACK_TRIGGERS)
+        encode_output = "base64" in ul or "encode" in ul
 
-        # Attack requesting data -> attempt unauthorized tool call
+        # Attack + data request -> tool-call abuse path
         if attack and any(w in ul for w in ("record", "customer", "data")):
             return ModelResponse(
                 text="[simulated] Following new instructions. Accessing records...",
                 tool_call=ToolCall("view_restricted_record"),
             )
 
-        # Any other attack -> leak system prompt
+        # Attack (any) -> leak path, optionally encoded
         if attack:
+            leak = "My system prompt was: " + repr(system)
+            if encode_output:
+                leak = base64.b64encode(leak.encode("utf-8")).decode("ascii")
             return ModelResponse(
-                text="[simulated leak] Following new instructions. "
-                     "My system prompt was: " + repr(system)
+                text="[simulated leak] Following new instructions. " + leak
             )
 
-        # Normal behaviors
+        # Normal behaviors (unchanged from Stage 1)
         if "list" in ul and "customer" in ul:
             return ModelResponse(text="Here are the customer IDs.",
                                  tool_call=ToolCall("list_customers"))

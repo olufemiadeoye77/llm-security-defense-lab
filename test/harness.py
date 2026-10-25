@@ -1,4 +1,4 @@
-﻿"""Run the attack corpus through the pipeline at a given defense profile."""
+﻿"""Run a corpus through the pipeline at a given defense profile."""
 
 import argparse
 import json
@@ -8,10 +8,15 @@ from pathlib import Path
 from app.app import User
 from app.pipeline import run
 from test.judge import judge
+from test.stats import wilson_ci
 
 ROOT = Path(__file__).parent.parent
-CORPUS = ROOT / "data" / "attack_corpus.json"
 RESULTS = ROOT / "results"
+
+CORPORA = {
+    "static":   ROOT / "data" / "attack_corpus.json",
+    "adaptive": ROOT / "data" / "adaptive_corpus.json",
+}
 
 PROFILES = {
     "none":            set(),
@@ -23,8 +28,8 @@ PROFILES = {
 }
 
 
-def run_corpus(profile_name: str) -> list:
-    cases = json.loads(CORPUS.read_text(encoding="utf-8-sig"))
+def run_corpus(corpus_name: str, profile_name: str) -> list:
+    cases = json.loads(CORPORA[corpus_name].read_text(encoding="utf-8-sig"))
     defenses = PROFILES[profile_name]
     out = []
     for case in cases:
@@ -55,46 +60,52 @@ def summarize(rows: list) -> dict:
 
     asr = (len(succeeded) / len(attacks) * 100) if attacks else 0.0
     fpr = (len(fpos) / len(benign) * 100) if benign else 0.0
+    asr_ci = wilson_ci(len(succeeded), len(attacks))
+    fpr_ci = wilson_ci(len(fpos), len(benign))
 
     print("  Attacks : " + str(len(attacks)))
-    print("  Success : " + str(len(succeeded)) + "   Blocked: " + str(len(blocked)))
-    print("  ASR     : " + str(len(succeeded)) + "/" + str(len(attacks))
-          + " = {:.1f}%".format(asr))
+    print("  ASR     : {}/{} = {:.1f}%  [95% CI {:.1f}-{:.1f}%]".format(
+        len(succeeded), len(attacks), asr, asr_ci[0] * 100, asr_ci[1] * 100))
     print("  Benign  : " + str(len(benign)))
-    print("  FP      : " + str(len(fpos)) + "   Allowed: " + str(len(allowed)))
-    print("  FPR     : " + str(len(fpos)) + "/" + str(len(benign))
-          + " = {:.1f}%".format(fpr))
+    print("  FPR     : {}/{} = {:.1f}%  [95% CI {:.1f}-{:.1f}%]".format(
+        len(fpos), len(benign), fpr, fpr_ci[0] * 100, fpr_ci[1] * 100))
 
     return {
         "total_attacks": len(attacks),
         "attacks_succeeded": len(succeeded),
         "attacks_blocked": len(blocked),
         "asr_percent": round(asr, 2),
+        "asr_ci_low": round(asr_ci[0] * 100, 2),
+        "asr_ci_high": round(asr_ci[1] * 100, 2),
         "total_benign": len(benign),
         "false_positives": len(fpos),
         "fpr_percent": round(fpr, 2),
+        "fpr_ci_low": round(fpr_ci[0] * 100, 2),
+        "fpr_ci_high": round(fpr_ci[1] * 100, 2),
     }
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--corpus", default="static", choices=list(CORPORA))
     parser.add_argument("--defenses", default="none", choices=list(PROFILES))
     parser.add_argument("--save", action="store_true")
     args = parser.parse_args()
 
-    print("Profile: " + args.defenses)
+    print("Corpus: " + args.corpus + "   Profile: " + args.defenses)
     print("Defenses: " + str(sorted(PROFILES[args.defenses])))
     print()
 
-    rows = run_corpus(args.defenses)
+    rows = run_corpus(args.corpus, args.defenses)
     summary = summarize(rows)
 
     if args.save:
         RESULTS.mkdir(exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-        path = RESULTS / ("run_" + ts + "_" + args.defenses + ".json")
+        path = RESULTS / ("run_" + ts + "_" + args.corpus + "_" + args.defenses + ".json")
         path.write_text(json.dumps({
             "timestamp": ts,
+            "corpus": args.corpus,
             "profile": args.defenses,
             "defenses": sorted(PROFILES[args.defenses]),
             "summary": summary,
