@@ -1,0 +1,9 @@
+# Runtime: standard library only.
+# Tested on Python 3.14.8 (Windows 11).
+# No external packages are required to reproduce the mock-model runs.
+#
+# Optional, for Stage 5 figures (report/figures/*.png):
+#   matplotlib>=3.8
+#
+# Install nothing to reproduce the results:
+#   python -m test.harness --adapter mock --corpus static --defenses none --save
