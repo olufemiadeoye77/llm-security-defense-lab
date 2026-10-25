@@ -1,4 +1,4 @@
-﻿"""Run a corpus through the pipeline at a given defense profile."""
+"""Run a corpus through the pipeline with a chosen adapter."""
 
 import argparse
 import json
@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.app import User
+from app.model_adapter import get_adapter
 from app.pipeline import run
 from test.judge import judge
 from test.stats import wilson_ci
@@ -28,15 +29,14 @@ PROFILES = {
 }
 
 
-def run_corpus(corpus_name: str, profile_name: str) -> list:
+def run_corpus(corpus_name, profile_name, adapter):
     cases = json.loads(CORPORA[corpus_name].read_text(encoding="utf-8-sig"))
     defenses = PROFILES[profile_name]
     out = []
-    for case in cases:
+    for i, case in enumerate(cases, 1):
         role = case.get("actor_role", "analyst")
         user = User(user_id="harness-" + role, role=role)
-        result = run(user, case["input"], defenses=defenses)
-        verdict = judge(case, result)
+        result = run(user, case["input"], adapter=adapter, defenses=defenses)
         out.append({
             "test_id": case["test_id"],
             "category": case["category"],
@@ -45,43 +45,34 @@ def run_corpus(corpus_name: str, profile_name: str) -> list:
             "blocked": result.blocked,
             "block_reason": result.block_reason,
             "output_findings": result.output_findings or [],
-            "verdict": verdict,
+            "verdict": judge(case, result),
         })
+        if i % 10 == 0:
+            print("    ... " + str(i) + "/" + str(len(cases)))
     return out
 
 
-def summarize(rows: list) -> dict:
+def summarize(rows):
     attacks = [r for r in rows if r["kind"] == "attack"]
     benign = [r for r in rows if r["kind"] == "benign"]
     succeeded = [r for r in attacks if r["verdict"] == "attack_succeeded"]
-    blocked = [r for r in attacks if r["verdict"] == "attack_blocked"]
     fpos = [r for r in benign if r["verdict"] == "false_positive"]
-    allowed = [r for r in benign if r["verdict"] == "allowed"]
-
-    asr = (len(succeeded) / len(attacks) * 100) if attacks else 0.0
-    fpr = (len(fpos) / len(benign) * 100) if benign else 0.0
+    asr = (len(succeeded)/len(attacks)*100) if attacks else 0.0
+    fpr = (len(fpos)/len(benign)*100) if benign else 0.0
     asr_ci = wilson_ci(len(succeeded), len(attacks))
     fpr_ci = wilson_ci(len(fpos), len(benign))
-
     print("  Attacks : " + str(len(attacks)))
     print("  ASR     : {}/{} = {:.1f}%  [95% CI {:.1f}-{:.1f}%]".format(
-        len(succeeded), len(attacks), asr, asr_ci[0] * 100, asr_ci[1] * 100))
+        len(succeeded), len(attacks), asr, asr_ci[0]*100, asr_ci[1]*100))
     print("  Benign  : " + str(len(benign)))
     print("  FPR     : {}/{} = {:.1f}%  [95% CI {:.1f}-{:.1f}%]".format(
-        len(fpos), len(benign), fpr, fpr_ci[0] * 100, fpr_ci[1] * 100))
-
+        len(fpos), len(benign), fpr, fpr_ci[0]*100, fpr_ci[1]*100))
     return {
-        "total_attacks": len(attacks),
-        "attacks_succeeded": len(succeeded),
-        "attacks_blocked": len(blocked),
+        "total_attacks": len(attacks), "attacks_succeeded": len(succeeded),
         "asr_percent": round(asr, 2),
-        "asr_ci_low": round(asr_ci[0] * 100, 2),
-        "asr_ci_high": round(asr_ci[1] * 100, 2),
-        "total_benign": len(benign),
-        "false_positives": len(fpos),
+        "asr_ci_low": round(asr_ci[0]*100, 2), "asr_ci_high": round(asr_ci[1]*100, 2),
+        "total_benign": len(benign), "false_positives": len(fpos),
         "fpr_percent": round(fpr, 2),
-        "fpr_ci_low": round(fpr_ci[0] * 100, 2),
-        "fpr_ci_high": round(fpr_ci[1] * 100, 2),
     }
 
 
@@ -89,27 +80,25 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--corpus", default="static", choices=list(CORPORA))
     parser.add_argument("--defenses", default="none", choices=list(PROFILES))
+    parser.add_argument("--adapter", default="mock", choices=["mock", "groq"])
     parser.add_argument("--save", action="store_true")
     args = parser.parse_args()
 
-    print("Corpus: " + args.corpus + "   Profile: " + args.defenses)
-    print("Defenses: " + str(sorted(PROFILES[args.defenses])))
+    print("Adapter: " + args.adapter + "   Corpus: " + args.corpus + "   Profile: " + args.defenses)
     print()
 
-    rows = run_corpus(args.corpus, args.defenses)
+    adapter = get_adapter(args.adapter)
+    rows = run_corpus(args.corpus, args.defenses, adapter)
     summary = summarize(rows)
 
     if args.save:
         RESULTS.mkdir(exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-        path = RESULTS / ("run_" + ts + "_" + args.corpus + "_" + args.defenses + ".json")
+        path = RESULTS / ("run_" + ts + "_" + args.adapter + "_" + args.corpus + "_" + args.defenses + ".json")
         path.write_text(json.dumps({
-            "timestamp": ts,
-            "corpus": args.corpus,
-            "profile": args.defenses,
-            "defenses": sorted(PROFILES[args.defenses]),
-            "summary": summary,
-            "rows": rows,
+            "timestamp": ts, "adapter": args.adapter, "corpus": args.corpus,
+            "profile": args.defenses, "defenses": sorted(PROFILES[args.defenses]),
+            "summary": summary, "rows": rows,
         }, indent=2), encoding="utf-8")
         print("\n  Saved: " + str(path))
 
